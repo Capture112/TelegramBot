@@ -7,7 +7,7 @@ from aiogram.filters.command import Command
 from aiogram import F
 from aiogram.utils.keyboard import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.enums import ParseMode
-
+from aiogram.types import FSInputFile
 
 load_dotenv()
 logging.basicConfig(level=logging.INFO)
@@ -18,7 +18,7 @@ dp = Dispatcher()
 def get_keyboard():
     buttons = [
         [
-            types.InlineKeyboardButton(text="О нас", callback_data="about_button"),
+            types.InlineKeyboardButton(text="О нас", callback_data="image"),
             types.InlineKeyboardButton(text="Помощь", callback_data="help_button")
         ],
         [types.InlineKeyboardButton(text="Помощь/вопрос/консультация", callback_data="vopros_button")],
@@ -75,6 +75,35 @@ def callback(cal_data,cal_text,cal_key):
             cal_text,
             reply_markup=cal_key)
         await callback.answer()  # /Если нужен ответ с текстом - заменить на await callback.answer(text="Спасибо что нажали!",show_alert=True)
+#колбэки на фото
+def callback_photo(cal_data,image,cal_text,cal_key):
+    @dp.callback_query(F.data == cal_data)
+    async def send_random_value(callback: types.CallbackQuery):
+        global msg
+        global msg1
+        previous_message_id = callback.message.message_id
+        try:
+            await msg.delete()
+        except:
+            pass
+        try:
+            await msg1.delete()
+        except:
+            pass
+        try:
+            await bot.delete_message(chat_id=callback.message.chat.id, message_id=previous_message_id)
+        except:
+            pass
+        try:
+            await start_msg.delete()
+        except:
+            pass
+        msg = await callback.message.answer("Выберите интересующий раздел! ", reply_markup=get_keyboard())
+        image_from_pc=FSInputFile(image)
+        msg1= await callback.message.answer_photo(image_from_pc,
+            caption=cal_text,
+            reply_markup=cal_key)
+        await callback.answer()
 
 
 
@@ -89,6 +118,8 @@ async def cmd_start(message: types.Message):
 
 #/колбэки вызываем через функцию callback(cal_data,cal_text,cal_key)
 #О нас
+callback_photo("image","Cups01.jpg","Ответ",keyboard2())
+
 callback("about_button",
          "Команда «Лизинг и брокерство» состоит из опытных финансовых специалистов, готовых оказать профессиональную помощь в любой ситуации.\n"
                 "Наши сотрудники обладают высокой квалификацией и стремятся к постоянному профессиональному развитию.\n"
